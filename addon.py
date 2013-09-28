@@ -65,7 +65,6 @@ def loadClasses(username, password):
 	
 	did_login = False
 	if cookies_raw is None or external_id is None or public_id is None:
-		plugin.log.info("Logging in")
 		external_id, public_id, cookies_raw = login(username, password)
 		user_data['cookies'] = cookies_raw
 		user_data['external_id'] = external_id
@@ -74,7 +73,7 @@ def loadClasses(username, password):
 	else:
 		plugin.log.debug("Loading data from store")
 
-	plugin.log.debug("external_id=%s, public_id=%s" % (external_id, public_id))
+	plugin.log.info("external_id=%s, public_id=%s" % (external_id, public_id))
 #	plugin.log.debug("Cookies:\n%s" % '\n'.join([str(x) for x in cookies_raw]))
 	
 	opener = getOpenerFromRawCookies(cookies_raw=cookies_raw)
@@ -229,11 +228,17 @@ def listCourses(shortName):
 
 @plugin.cached(TTL=CACHE_TIME)
 def getClassCookies(className, username, password):
+
+	
 	user_data = plugin.get_storage(username, file_format='json')
+	
+	
 	if user_data is None:
 		return None
 	
 	cookies_raw = user_data.get('cookies')
+	
+	
 	if cookies_raw is None:
 		external_id, public_id, cookies_raw = login(username, password)
 		if cookies_raw is None:
@@ -243,10 +248,9 @@ def getClassCookies(className, username, password):
 		user_data['public_id'] = public_id
 
 	cj = loadSavedCookies(cookies_raw=cookies_raw)
-	
 	opener = getOpener(cj=cj)
 	
-	plugin.log.debug("Logging in to class: %s" % className)
+	plugin.log.info("Logging in to class: %s" % className)
 	logged_in = login_to_class(className, opener, username, password)
 	
 	if logged_in == False:
@@ -255,17 +259,18 @@ def getClassCookies(className, username, password):
 	CSRFT_TOKEN_COOKIE_NAME = "csrf_token"
 	cj.clear(domain="class.coursera.org", path="/%s" % className, name=CSRFT_TOKEN_COOKIE_NAME)
 	#cj.clear(domain="class.coursera.org", path="/%s" % className, name="session")
-	cj.clear(domain="www.coursera.org", path="/" , name="maestro_login")
-	cj.clear(domain="www.coursera.org", path="/" , name="sessionid")
+	#cj.clear(domain="www.coursera.org", path="/" , name="maestro_login")
+	#cj.clear(domain="www.coursera.org", path="/" , name="sessionid")
 	
 	return saveCJ(cj)
 
 def loadSavedClassCookies(username):
 	user_data = plugin.get_storage(username, file_format='json')
-
+	
 	cookies_class = user_data.get('cookies_class')
 	if cookies_class is None:
 		cookies_class = user_data['cookies_class'] = {}
+	
 	
 	return cookies_class	
 
@@ -275,7 +280,7 @@ def getSylabus(className, username, password):
 	
 	cookies, didLogin = getClassCookieOrLogin(username, password, className, indicateDidLogin=True)
 	url = get_syllabus_url(className=className)
-	plugin.log.debug("syllabus_url=%s" % url)
+	plugin.log.info("syllabus_url=%s" % url)
 	opener = getOpenerFromRawCookies(cookies_raw=cookies)
 
 	sylabus_txt = get_page(url, opener)
@@ -368,7 +373,7 @@ def getClassCookieOrLogin(username, password, courseShortName, indicateDidLogin=
 	
 	class_cookies = cookies_class.get(courseShortName)
 	if class_cookies is None:
-		plugin.log.debug("Cookies for %s not found. Logging in to class" % courseShortName)
+		plugin.log.info("Cookies for %s not found. Logging in to class" % courseShortName)
 		class_cookies = getClassCookies(courseShortName, username, password)
 		
 		if class_cookies is not None:
