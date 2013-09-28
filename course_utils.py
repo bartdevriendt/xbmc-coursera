@@ -75,7 +75,7 @@ def login_to_class(className, opener, username, password):
 		return True
 	else:
 		print "Unknown state (from title): %s" % classLogin_title
-		return False
+		return True
 
 def grab_hidden_video_url(href, opener):
 	"""
