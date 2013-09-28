@@ -51,12 +51,20 @@ def makeCSRFToken():
 
 
 def makeLoginRequest(username, password, csrftoken):
-	params = urllib.urlencode({'email_address':username, 'password':password})
-	req = urllib2.Request("https://www.coursera.org/maestro/api/user/login", params)
-	req.add_header('Referer','https://www.coursera.org/account/signin')
-	req.add_header('Host',"www.coursera.org")
+	params = urllib.urlencode({'email':username, 'password':password})
+	req = urllib2.Request("https://accounts.coursera.org/api/v1/login", params)
+	req.add_header('Referer','https://accounts.coursera.org/signin')
+	req.add_header('Host',"accounts.coursera.org")
 	req.add_header('X-CSRFToken', csrftoken)
 	req.add_header('X-Requested-With', 'XMLHttpRequest')
+	
+	return req
+
+def getUserDetailsRequest():
+
+	req = urllib2.Request("https://www.coursera.org/account/signedin?")
+	req.add_header("Referer", "https://accounts.coursera.org/signin")
+	req.add_header('Host', 'www.coursera.org')
 	
 	return req
 
@@ -78,15 +86,25 @@ def login(username, password):
 	req = makeLoginRequest(username, password, csrftoken)
 	response = opener.open(req)
 	logIn_resp = response.read()
+	cj.clear("", "/", CSRFT_TOKEN_COOKIE_NAME)
+	req = getUserDetailsRequest()
+	response = opener.open(req)
+	logIn_resp = response.read()
+	idx = logIn_resp.index("return") + 6
+	idx2 = logIn_resp.index("};", idx) + 1
 	
-	logIn_resp_dict = json.loads(logIn_resp)
+	log_resp = "[" + logIn_resp[idx:idx2] + "]"
+	
+	logIn_resp_dict = json.loads(log_resp)
 	
 	#print logIn_resp_dict
+	
+	logIn_resp_dict = logIn_resp_dict[0]
 	
 	external_id = str(logIn_resp_dict["external_id"])
 	public_id = str(logIn_resp_dict["id"])
 	
-	cj.clear("", "/", CSRFT_TOKEN_COOKIE_NAME)
+	#cj.clear("", "/", CSRFT_TOKEN_COOKIE_NAME)
 	
 	#cj.clear("www.coursera.org", "/", "maestro_login")
 	#cj.clear("www.coursera.org", "/", "sessionid")
