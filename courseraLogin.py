@@ -3,13 +3,17 @@ Created on Nov 5, 2012
 
 @author: alex
 '''
+from xbmcswift2 import Plugin, xbmc
+import xbmcswift2
 
 import urllib2, urllib
 import cookielib
 import random
 import string
 import json
+import logging
 
+plugin = Plugin()
 #########
 
 def saveUserData(cookies, external_id, public_id):
@@ -52,8 +56,10 @@ def makeCSRFToken():
 
 def makeLoginRequest(username, password, csrftoken):
 	params = urllib.urlencode({'email':username, 'password':password})
+	#req = urllib2.Request("https://www.coursera.org/maestro/api/user/login", params)
 	req = urllib2.Request("https://accounts.coursera.org/api/v1/login", params)
 	req.add_header('Referer','https://accounts.coursera.org/signin')
+	#req.add_header('Referer','https://www.coursera.org/account/signin')
 	req.add_header('Host',"accounts.coursera.org")
 	req.add_header('X-CSRFToken', csrftoken)
 	req.add_header('X-Requested-With', 'XMLHttpRequest')
@@ -67,7 +73,7 @@ def getUserDetailsRequest():
 	req.add_header('Host', 'www.coursera.org')
 	
 	return req
-
+	
 def login(username, password):
 	cj = cookielib.CookieJar()
 	opener = urllib2.build_opener(urllib2.HTTPCookieProcessor(cj))
